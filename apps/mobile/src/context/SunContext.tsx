@@ -60,10 +60,20 @@ export function SunProvider({ children }: SunProviderProps) {
 
 function SunContextInner({ children }: SunProviderProps) {
   // Fetch sun state on mount
-  const { data, isLoading } = trpc.sun.getInitialState.useQuery();
+  const { data, isLoading, error } = trpc.sun.getInitialState.useQuery();
+
+  // Log errors for debugging
+  useEffect(() => {
+    if (error) {
+      console.error("Sun state query error:", error);
+    }
+  }, [error]);
 
   // Create shared value for altitude (in degrees)
-  const altitudeShared = useSharedValue<number>(data?.sun.altitudeDegrees ?? 0);
+  // Default to a reasonable midday altitude (30°) instead of 0° (sunrise)
+  const altitudeShared = useSharedValue<number>(
+    data?.sun.altitudeDegrees ?? 30
+  );
 
   // Update shared value when data changes
   useEffect(() => {
@@ -76,10 +86,22 @@ function SunContextInner({ children }: SunProviderProps) {
 
   // Animated style for sky background
   const skyStyle = useAnimatedStyle(() => {
+    "worklet";
+    const color = interpolateSkyColor(altitudeShared.value);
     return {
-      backgroundColor: interpolateSkyColor(altitudeShared.value),
+      flex: 1,
+      backgroundColor: color,
     };
   });
+
+  // Debug: Log altitude and color when data changes
+  useEffect(() => {
+    if (data?.sun.altitudeDegrees !== undefined) {
+      console.log("Sun altitude:", data.sun.altitudeDegrees);
+      // Note: interpolateSkyColor needs to be called outside worklet for logging
+      // The actual color in the animated style will be correct
+    }
+  }, [data?.sun.altitudeDegrees]);
 
   // Animated style for sun emissive color
   const sunStyle = useAnimatedStyle(() => {

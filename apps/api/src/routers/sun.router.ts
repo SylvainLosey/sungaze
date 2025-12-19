@@ -9,22 +9,27 @@ import { SunStateResponseSchema } from "@sungaze/core";
 
 export const sunRouter = router({
   getInitialState: publicProcedure.query(async ({ ctx }) => {
-    const { ip } = ctx;
+    try {
+      const { ip } = ctx;
 
-    // Get location from IP address
-    const location = await getLocationFromIp(ip);
+      // Get location from IP address
+      const location = await getLocationFromIp(ip);
 
-    // Get sun position for the location
-    const sun = getSunState(location.lat, location.lon);
+      // Get sun position for the location (using location's timezone context)
+      const sun = getSunState(location.lat, location.lon, location.timezone);
 
-    // Construct response
-    const response = {
-      location,
-      sun,
-      timestamp: new Date().toISOString(),
-    };
+      // Construct response
+      const response = {
+        location,
+        sun,
+        timestamp: new Date().toISOString(),
+      };
 
-    // Validate and return
-    return SunStateResponseSchema.parse(response);
+      // Validate and return
+      return SunStateResponseSchema.parse(response);
+    } catch (error) {
+      console.error("Error in getInitialState:", error);
+      throw error;
+    }
   }),
 });

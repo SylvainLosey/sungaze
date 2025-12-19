@@ -9,48 +9,59 @@ import { SOLAR_ANGLES } from "@sungaze/core";
 /**
  * Input range for color interpolation (altitude in degrees).
  */
-export const SOLAR_COLOR_INPUT_RANGE = [
+export const SOLAR_COLOR_INPUT_RANGE: number[] = [
   SOLAR_ANGLES.ASTRONOMICAL_DAWN, // -18
   SOLAR_ANGLES.CIVIL_DAWN, // -6
   SOLAR_ANGLES.SUNRISE, // 0
   SOLAR_ANGLES.UVA_START, // 12
-  45, // Daylight
-] as const;
+  20, // Morning
+  30, // Mid-morning
+  45, // Midday
+  60, // Afternoon
+];
 
 /**
  * Output range for sky background colors.
+ * Lighter, more pastel colors for daytime.
+ * Adjusted for lower angles (9-12°) to be more muted.
  */
-export const SKY_COLOR_OUTPUT_RANGE = [
+export const SKY_COLOR_OUTPUT_RANGE: string[] = [
   "#000814", // Night (Astronomical Dawn)
   "#4831d4", // Civil Twilight/Deep Purple
   "#ff4d6d", // Sunrise/Infrared Pink
-  "#ffb703", // UVA/Golden
-  "#00b4d8", // Daylight Blue
-] as const;
+  "#d4a574", // UVA (muted tan/beige instead of bright orange)
+  "#e8d5b7", // Morning (warm beige)
+  "#f0e6d2", // Mid-morning (light beige)
+  "#e8f4f8", // Midday (very light blue)
+  "#d4e8f0", // Afternoon (light sky blue)
+];
 
 /**
  * Output range for sun emissive colors.
  */
-export const SUN_COLOR_OUTPUT_RANGE = [
+export const SUN_COLOR_OUTPUT_RANGE: string[] = [
   "#1a1a2e", // Night (darker)
   "#5a4fcf", // Civil Twilight (brighter purple)
   "#ff6b9d", // Sunrise (brighter pink)
   "#ffd60a", // UVA (brighter gold)
-  "#48cae4", // Daylight (brighter cyan)
-] as const;
+  "#ffed4e", // Morning (bright yellow)
+  "#fff9a5", // Mid-morning (pale yellow)
+  "#fffacd", // Midday (lemon chiffon)
+  "#fff8dc", // Afternoon (cornsilk)
+];
 
 /**
  * Helper function to interpolate sky color.
  * Use this within useAnimatedStyle.
  * @param altitudeValue - Current altitude value (from shared value)
- * @returns Interpolated color string
+ * @returns Interpolated color (works in worklets)
  */
-export function interpolateSkyColor(altitudeValue: number): string {
+export function interpolateSkyColor(altitudeValue: number) {
+  "worklet";
   return interpolateColor(
     altitudeValue,
     SOLAR_COLOR_INPUT_RANGE,
-    SKY_COLOR_OUTPUT_RANGE,
-    "RGB"
+    SKY_COLOR_OUTPUT_RANGE
   );
 }
 
@@ -58,13 +69,13 @@ export function interpolateSkyColor(altitudeValue: number): string {
  * Helper function to interpolate sun color.
  * Use this within useAnimatedStyle.
  * @param altitudeValue - Current altitude value (from shared value)
- * @returns Interpolated color string
+ * @returns Interpolated color (works in worklets)
  */
-export function interpolateSunColor(altitudeValue: number): string {
+export function interpolateSunColor(altitudeValue: number) {
+  "worklet";
   return interpolateColor(
     altitudeValue,
     SOLAR_COLOR_INPUT_RANGE,
-    SUN_COLOR_OUTPUT_RANGE,
-    "RGB"
+    SUN_COLOR_OUTPUT_RANGE
   );
 }
