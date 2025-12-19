@@ -1,0 +1,32 @@
+# Nixpacks configuration for Railway deployment
+# Deploy from repo root to support multiple services (API, web, etc.)
+# Use Turbo to build and run specific services
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm"]
+
+[phases.install]
+cmds = [
+  "pnpm install --frozen-lockfile"
+]
+
+[phases.build]
+# Use Turbo to build the service specified by RAILWAY_SERVICE env var
+# Defaults to @sungaze/api if not set
+# The ... syntax means "this package and all its dependencies"
+# Turbo respects the dependency graph from turbo.json (^build)
+#
+# To deploy a different service, set RAILWAY_SERVICE env var:
+# - For API: RAILWAY_SERVICE=@sungaze/api (or leave unset)
+# - For Web: RAILWAY_SERVICE=@sungaze/web
+cmds = [
+  "pnpm exec turbo build --filter=${RAILWAY_SERVICE:-@sungaze/api}..."
+]
+
+[start]
+# Start the service specified by RAILWAY_SERVICE env var
+# Defaults to @sungaze/api if not set
+# Uses pnpm --filter to run the start script in the specified package
+# (pnpm is more reliable than turbo for start since start tasks are persistent)
+cmd = "pnpm --filter ${RAILWAY_SERVICE:-@sungaze/api} start"
+
