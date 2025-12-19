@@ -12,7 +12,7 @@ import {
 } from "react-native-reanimated";
 import { trpc } from "@/lib/trpc";
 import { createTRPCClient } from "@/lib/trpc-client";
-import type { Location } from "@sungaze/core";
+import { calculateSunPosition, type Location } from "@sungaze/core";
 import {
   interpolateSkyColor,
   interpolateSunColor,
@@ -25,6 +25,7 @@ interface SunContextValue {
   isReady: boolean;
   // Animated shared values
   altitudeShared: ReturnType<typeof useSharedValue<number>>;
+  azimuthShared: ReturnType<typeof useSharedValue<number>>;
   // Animated styles
   skyStyle: ReturnType<typeof useAnimatedStyle>;
   sunStyle: ReturnType<typeof useAnimatedStyle>;
@@ -59,8 +60,60 @@ export function SunProvider({ children }: SunProviderProps) {
 }
 
 function SunContextInner({ children }: SunProviderProps) {
-  // Fetch sun state on mount
+  // Fetch sun state and location on mount from API
   const { data, isLoading, error } = trpc.sun.getInitialState.useQuery();
+
+  // React state for live updates (for regular React components)
+  const [liveAltitude, setLiveAltitude] = React.useState<number | null>(null);
+  const [liveAzimuth, setLiveAzimuth] = React.useState<number | null>(null);
+
+  // Shared values for smooth animations (for Reanimated/Worklets)
+  const altitudeShared = useSharedValue<number>(
+    data?.sun.altitudeDegrees ?? 30
+  );
+  const azimuthShared = useSharedValue<number>(data?.sun.azimuthDegrees ?? 0);
+
+  // Initialize live state from API data
+  useEffect(() => {
+    if (data?.sun) {
+      setLiveAltitude(data.sun.altitudeDegrees);
+      setLiveAzimuth(data.sun.azimuthDegrees);
+      altitudeShared.value = data.sun.altitudeDegrees;
+      azimuthShared.value = data.sun.azimuthDegrees;
+    }
+  }, [data?.sun, altitudeShared, azimuthShared]);
+
+  // Live update loop
+  useEffect(() => {
+    if (!data?.location) return;
+
+    const updateSunPosition = () => {
+      const { lat, lon } = data.location;
+      const currentPos = calculateSunPosition(lat, lon);
+
+      // Update React state
+      setLiveAltitude(currentPos.altitudeDegrees);
+      setLiveAzimuth(currentPos.azimuthDegrees);
+
+      // Update shared values with timing for smooth transitions
+      altitudeShared.value = withTiming(currentPos.altitudeDegrees, {
+        duration: 2000,
+      });
+      azimuthShared.value = withTiming(currentPos.azimuthDegrees, {
+        duration: 2000,
+      });
+
+      console.log(
+        `[Live Update] Altitude: ${currentPos.altitudeDegrees.toFixed(
+          2
+        )}°, Azimuth: ${currentPos.azimuthDegrees.toFixed(2)}°`
+      );
+    };
+
+    // Update every 30 seconds
+    const interval = setInterval(updateSunPosition, 30000);
+    return () => clearInterval(interval);
+  }, [data?.location, altitudeShared, azimuthShared]);
 
   // Log errors for debugging
   useEffect(() => {
@@ -68,21 +121,6 @@ function SunContextInner({ children }: SunProviderProps) {
       console.error("Sun state query error:", error);
     }
   }, [error]);
-
-  // Create shared value for altitude (in degrees)
-  // Default to a reasonable midday altitude (30°) instead of 0° (sunrise)
-  const altitudeShared = useSharedValue<number>(
-    data?.sun.altitudeDegrees ?? 30
-  );
-
-  // Update shared value when data changes
-  useEffect(() => {
-    if (data?.sun.altitudeDegrees !== undefined) {
-      altitudeShared.value = withTiming(data.sun.altitudeDegrees, {
-        duration: 1000, // Smooth transition over 1 second
-      });
-    }
-  }, [data?.sun.altitudeDegrees, altitudeShared]);
 
   // Animated style for sky background
   const skyStyle = useAnimatedStyle(() => {
@@ -94,30 +132,20 @@ function SunContextInner({ children }: SunProviderProps) {
     };
   });
 
-  // Debug: Log altitude and color when data changes
-  useEffect(() => {
-    if (data?.sun.altitudeDegrees !== undefined) {
-      console.log("Sun altitude:", data.sun.altitudeDegrees);
-      // Note: interpolateSkyColor needs to be called outside worklet for logging
-      // The actual color in the animated style will be correct
-    }
-  }, [data?.sun.altitudeDegrees]);
-
   // Animated style for sun emissive color
   const sunStyle = useAnimatedStyle(() => {
     return {
-      // For sun, we might want to use this as a tint or shadow color
-      // Adjust based on your UI needs
       tintColor: interpolateSunColor(altitudeShared.value),
     };
   });
 
   const value: SunContextValue = {
-    altitudeDegrees: data?.sun.altitudeDegrees ?? null,
-    azimuthDegrees: data?.sun.azimuthDegrees ?? null,
+    altitudeDegrees: liveAltitude,
+    azimuthDegrees: liveAzimuth,
     location: data?.location ?? null,
-    isReady: !isLoading && data !== undefined,
+    isReady: !isLoading && data !== undefined && liveAltitude !== null,
     altitudeShared,
+    azimuthShared,
     skyStyle,
     sunStyle,
   };

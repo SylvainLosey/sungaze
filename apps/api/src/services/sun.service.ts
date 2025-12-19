@@ -2,16 +2,7 @@
  * Sun service for calculating sun position and state.
  */
 
-import * as SunCalc from "suncalc";
-import { radiansToDegrees } from "@sungaze/core";
-
-/**
- * Sun position in degrees.
- */
-export interface SunPosition {
-  altitudeDegrees: number;
-  azimuthDegrees: number;
-}
+import { calculateSunPosition, type SunPosition } from "@sungaze/core";
 
 /**
  * Gets the current sun state (position) for a given location.
@@ -23,15 +14,8 @@ export interface SunPosition {
 export function getSunState(
   lat: number,
   lon: number,
-  timezone?: string
+  _timezone?: string
 ): SunPosition {
-  // Use current time - SunCalc handles timezone internally based on lat/lon
-  // The date object represents the local time at the location
-  const now = new Date();
-  const position = SunCalc.getPosition(now, lat, lon);
-
-  return {
-    altitudeDegrees: radiansToDegrees(position.altitude),
-    azimuthDegrees: radiansToDegrees(position.azimuth),
-  };
+  // Use shared logic from @sungaze/core
+  return calculateSunPosition(lat, lon);
 }
