@@ -16,12 +16,21 @@ export const LocationSchema = z.object({
 });
 
 /**
- * Schema for sun position data.
- * Altitude and azimuth are in degrees.
+ * Schema for exposure percentages (0-100).
  */
-export const SunPositionSchema = z.object({
+export const ExposureSchema = z.object({
+  uva: z.number().min(0).max(100),
+  uvb: z.number().min(0).max(100),
+  ir: z.number().min(0).max(100),
+});
+
+/**
+ * Schema for sun state data.
+ * Contains altitude (in degrees) and exposure percentages.
+ */
+export const SunStateSchema = z.object({
   altitudeDegrees: z.number(),
-  azimuthDegrees: z.number(),
+  exposure: ExposureSchema,
 });
 
 /**
@@ -29,11 +38,12 @@ export const SunPositionSchema = z.object({
  */
 export const SunStateResponseSchema = z.object({
   location: LocationSchema,
-  sun: SunPositionSchema,
+  sun: SunStateSchema,
   timestamp: z.string(), // ISO timestamp string
 });
 
 // Export inferred types for use across the monorepo
 export type SunStateResponse = z.infer<typeof SunStateResponseSchema>;
 export type Location = z.infer<typeof LocationSchema>;
-export type SunPosition = z.infer<typeof SunPositionSchema>;
+export type SunState = z.infer<typeof SunStateSchema>;
+export type Exposure = z.infer<typeof ExposureSchema>;

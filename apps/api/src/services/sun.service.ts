@@ -1,21 +1,21 @@
 /**
- * Sun service for calculating sun position and state.
+ * Sun service for calculating sun state (position and exposure).
  */
 
-import { calculateSunPosition, type SunPosition } from "@sungaze/core";
+import { calculateSunState, type SunState } from "@sungaze/core";
 
 /**
- * Gets the current sun state (position) for a given location.
+ * Gets the current sun state (altitude and exposure) for a given location.
  * @param lat - Latitude in degrees
  * @param lon - Longitude in degrees
- * @param timezone - Optional timezone string (e.g., "Europe/Zurich")
- * @returns Sun position with altitude and azimuth in degrees
+ * @param _timezone - Optional timezone string (e.g., "Europe/Zurich")
+ * @returns Sun state with altitude and exposure percentages (UVA, UVB, IR)
  */
 export function getSunState(
   lat: number,
   lon: number,
   _timezone?: string
-): SunPosition {
+): SunState {
   // Use shared logic from @sungaze/core
-  return calculateSunPosition(lat, lon);
+  return calculateSunState(lat, lon);
 }

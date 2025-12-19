@@ -7,6 +7,7 @@ export * from "./schemas/sun.schema";
 // Export physics constants and logic
 export * from "./physics/solar-angles";
 export * from "./physics/sun";
+export * from "./physics/exposure";
 
 // Export utility functions
 export * from "./utils/math";

@@ -12,7 +12,7 @@ import {
 } from "react-native-reanimated";
 import { trpc } from "@/lib/trpc";
 import { createTRPCClient } from "@/lib/trpc-client";
-import { calculateSunPosition, type Location } from "@sungaze/core";
+import { calculateSunState, type Location, type Exposure } from "@sungaze/core";
 import {
   interpolateSkyColor,
   interpolateSunColor,
@@ -20,12 +20,11 @@ import {
 
 interface SunContextValue {
   altitudeDegrees: number | null;
-  azimuthDegrees: number | null;
+  exposure: Exposure | null;
   location: Location | null;
   isReady: boolean;
   // Animated shared values
   altitudeShared: ReturnType<typeof useSharedValue<number>>;
-  azimuthShared: ReturnType<typeof useSharedValue<number>>;
   // Animated styles
   skyStyle: ReturnType<typeof useAnimatedStyle>;
   sunStyle: ReturnType<typeof useAnimatedStyle>;
@@ -65,55 +64,44 @@ function SunContextInner({ children }: SunProviderProps) {
 
   // React state for live updates (for regular React components)
   const [liveAltitude, setLiveAltitude] = React.useState<number | null>(null);
-  const [liveAzimuth, setLiveAzimuth] = React.useState<number | null>(null);
+  const [liveExposure, setLiveExposure] = React.useState<Exposure | null>(null);
 
   // Shared values for smooth animations (for Reanimated/Worklets)
   const altitudeShared = useSharedValue<number>(
     data?.sun.altitudeDegrees ?? 30
   );
-  const azimuthShared = useSharedValue<number>(data?.sun.azimuthDegrees ?? 0);
 
   // Initialize live state from API data
   useEffect(() => {
     if (data?.sun) {
       setLiveAltitude(data.sun.altitudeDegrees);
-      setLiveAzimuth(data.sun.azimuthDegrees);
+      setLiveExposure(data.sun.exposure);
       altitudeShared.value = data.sun.altitudeDegrees;
-      azimuthShared.value = data.sun.azimuthDegrees;
     }
-  }, [data?.sun, altitudeShared, azimuthShared]);
+  }, [data?.sun, altitudeShared]);
 
   // Live update loop
   useEffect(() => {
     if (!data?.location) return;
 
-    const updateSunPosition = () => {
+    const updateSunState = () => {
       const { lat, lon } = data.location;
-      const currentPos = calculateSunPosition(lat, lon);
+      const currentState = calculateSunState(lat, lon);
 
       // Update React state
-      setLiveAltitude(currentPos.altitudeDegrees);
-      setLiveAzimuth(currentPos.azimuthDegrees);
+      setLiveAltitude(currentState.altitudeDegrees);
+      setLiveExposure(currentState.exposure);
 
       // Update shared values with timing for smooth transitions
-      altitudeShared.value = withTiming(currentPos.altitudeDegrees, {
+      altitudeShared.value = withTiming(currentState.altitudeDegrees, {
         duration: 2000,
       });
-      azimuthShared.value = withTiming(currentPos.azimuthDegrees, {
-        duration: 2000,
-      });
-
-      console.log(
-        `[Live Update] Altitude: ${currentPos.altitudeDegrees.toFixed(
-          2
-        )}°, Azimuth: ${currentPos.azimuthDegrees.toFixed(2)}°`
-      );
     };
 
     // Update every 30 seconds
-    const interval = setInterval(updateSunPosition, 30000);
+    const interval = setInterval(updateSunState, 30000);
     return () => clearInterval(interval);
-  }, [data?.location, altitudeShared, azimuthShared]);
+  }, [data?.location, altitudeShared]);
 
   // Log errors for debugging
   useEffect(() => {
@@ -141,11 +129,10 @@ function SunContextInner({ children }: SunProviderProps) {
 
   const value: SunContextValue = {
     altitudeDegrees: liveAltitude,
-    azimuthDegrees: liveAzimuth,
+    exposure: liveExposure,
     location: data?.location ?? null,
     isReady: !isLoading && data !== undefined && liveAltitude !== null,
     altitudeShared,
-    azimuthShared,
     skyStyle,
     sunStyle,
   };
