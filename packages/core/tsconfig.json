@@ -2,8 +2,8 @@
   "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "lib": ["ESNext"],
     "outDir": "./dist",
     "rootDir": "./src",

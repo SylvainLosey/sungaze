@@ -11,22 +11,25 @@ cmds = [
 ]
 
 [phases.build]
-# Use Turbo to build the service specified by RAILWAY_SERVICE env var
-# Defaults to @sungaze/api if not set
+# Use Turbo to build the API and all its dependencies
 # The ... syntax means "this package and all its dependencies"
 # Turbo respects the dependency graph from turbo.json (^build)
-#
-# To deploy a different service, set RAILWAY_SERVICE env var:
-# - For API: RAILWAY_SERVICE=@sungaze/api (or leave unset)
-# - For Web: RAILWAY_SERVICE=@sungaze/web
 cmds = [
-  "pnpm exec turbo build --filter=${RAILWAY_SERVICE:-@sungaze/api}..."
+  "echo '=== Building with Turbo ==='",
+  "pnpm exec turbo build --filter=@sungaze/api...",
+  "echo '=== Checking build output ==='",
+  "echo 'Contents of apps/api/dist:'",
+  "ls -la apps/api/dist/ 2>&1 || echo 'dist folder does not exist'",
+  "echo 'Searching for index.js files:'",
+  "find apps/api -name 'index.js' -type f 2>&1",
+  "echo 'Full dist structure:'",
+  "find apps/api/dist -type f 2>&1 | head -20 || echo 'No files in dist'",
+  "INDEX_FILE=$(find apps/api/dist -name 'index.js' -type f 2>&1 | head -1) && if [ -n \"$INDEX_FILE\" ]; then echo \"✓ Build successful: Found index.js at $INDEX_FILE\"; else echo '✗ ERROR: index.js not found' && find apps/api/dist -type f 2>&1 | head -10 && exit 1; fi"
 ]
 
 [start]
-# Start the service specified by RAILWAY_SERVICE env var
-# Defaults to @sungaze/api if not set
-# Uses pnpm --filter to run the start script in the specified package
-# (pnpm is more reliable than turbo for start since start tasks are persistent)
-cmd = "pnpm --filter ${RAILWAY_SERVICE:-@sungaze/api} start"
+# Start the API service
+# TypeScript outputs to dist/apps/api/src/index.js (preserves full path structure)
+# The working directory in Railway is /app (repo root)
+cmd = "cd /app && node apps/api/dist/apps/api/src/index.js"
 
