@@ -5,7 +5,7 @@
 import { publicProcedure, router } from "../trpc";
 import { getLocationFromIp } from "../services/location.service";
 import { getSunState } from "../services/sun.service";
-import { SunStateResponseSchema } from "../schemas/sun.schema";
+import { SunStateResponseSchema } from "@sungaze/core";
 
 export const sunRouter = router({
   getInitialState: publicProcedure.query(async ({ ctx }) => {
@@ -28,4 +28,3 @@ export const sunRouter = router({
     return SunStateResponseSchema.parse(response);
   }),
 });
-

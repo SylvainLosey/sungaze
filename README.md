@@ -48,20 +48,25 @@
 ## Key Patterns
 
 ### React 19 Patterns
+
 - **`useActionState`** - For form handling
 - **`useOptimistic`** - For optimistic data updates
 
 ### Next.js 16 Patterns
+
 - **Async params/searchParams** - Mandatory async handling in App Router
 - **Server Components** - Default rendering strategy
 - **Turbopack** - Fast development builds
 
 ### Type Safety
+
 - **Zod Schemas** - Defined in `@sungaze/core`
 - **Type Inference** - API exports Zod-inferred types to prevent runtime drift
 - **Shared Interfaces** - Single source of truth for TypeScript types
+- **Architecture Guidelines** - See [`.cursorrules`](./.cursorrules) for detailed type sharing patterns and development rules
 
 ### Styling
+
 - **Unified Tailwind** - Shared configuration from `@sungaze/config`
 - **NativeWind v4** - Mobile styling (consumes shared Tailwind config)
 - **PostCSS** - Web styling (consumes shared Tailwind config)
@@ -140,20 +145,21 @@ pnpm format:check
 
 ### Root Level Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all apps in development mode |
-| `pnpm build` | Build all apps and packages |
-| `pnpm start` | Start all apps in production mode |
-| `pnpm lint` | Lint all workspaces |
-| `pnpm type-check` | Type-check all workspaces |
-| `pnpm format` | Format all files with Prettier |
-| `pnpm format:check` | Check formatting without changing files |
-| `pnpm clean` | Clean all build artifacts and node_modules |
+| Command             | Description                                |
+| ------------------- | ------------------------------------------ |
+| `pnpm dev`          | Start all apps in development mode         |
+| `pnpm build`        | Build all apps and packages                |
+| `pnpm start`        | Start all apps in production mode          |
+| `pnpm lint`         | Lint all workspaces                        |
+| `pnpm type-check`   | Type-check all workspaces                  |
+| `pnpm format`       | Format all files with Prettier             |
+| `pnpm format:check` | Check formatting without changing files    |
+| `pnpm clean`        | Clean all build artifacts and node_modules |
 
 ### App-Specific Commands
 
 #### Web (`apps/web`)
+
 ```bash
 pnpm --filter @sungaze/web dev        # Start Next.js dev server (Turbopack)
 pnpm --filter @sungaze/web build      # Build for production
@@ -162,6 +168,7 @@ pnpm --filter @sungaze/web lint       # Run ESLint
 ```
 
 #### API (`apps/api`)
+
 ```bash
 pnpm --filter @sungaze/api dev        # Start Fastify dev server (watch mode)
 pnpm --filter @sungaze/api build      # Compile TypeScript
@@ -170,6 +177,7 @@ pnpm --filter @sungaze/api lint       # Run ESLint
 ```
 
 #### Mobile (`apps/mobile`)
+
 ```bash
 pnpm --filter @sungaze/mobile dev     # Start Expo dev server
 pnpm --filter @sungaze/mobile ios     # Start iOS simulator
@@ -182,12 +190,14 @@ pnpm --filter @sungaze/mobile lint    # Run ESLint
 ### Package-Specific Commands
 
 #### Core (`packages/core`)
+
 ```bash
 pnpm --filter @sungaze/core build      # Build TypeScript
 pnpm --filter @sungaze/core type-check # Type-check without building
 ```
 
 #### UI (`packages/ui`)
+
 ```bash
 pnpm --filter @sungaze/ui build        # Build TypeScript
 pnpm --filter @sungaze/ui type-check   # Type-check without building
@@ -250,6 +260,7 @@ The project includes editor configuration for consistent development:
 - **`.prettierrc.mjs`** - Root Prettier config (references shared config)
 
 **Recommended Extensions** (install when prompted):
+
 - Prettier - Code formatter
 - ESLint
 - TypeScript and JavaScript Language Features
@@ -282,4 +293,3 @@ When adding new features:
 ## License
 
 ISC
-

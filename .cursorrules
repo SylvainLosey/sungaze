@@ -1,0 +1,277 @@
+# Sungaze Monorepo - Architecture & Development Rules
+
+This file is the **single source of truth** for architectural patterns and development guidelines. Follow these rules to maintain consistency and type safety across the monorepo.
+
+## 🎯 Core Principle: Single Source of Truth
+
+**`@sungaze/core` is the single source of truth** for all shared types, schemas, and interfaces used across multiple apps.
+
+## 📦 Package Responsibilities
+
+### `@sungaze/core` - Shared Contracts
+
+- **Purpose**: Single source of truth for shared types and schemas
+- **Contains**:
+  - Zod schemas for API/Form validation
+  - Shared TypeScript interfaces
+  - Zod-inferred types exported for type-safe contracts
+  - Shared utility types
+- **Rules**:
+  - ✅ ALL Zod schemas used by multiple apps MUST be in `packages/core/src/schemas/`
+  - ✅ ALL shared TypeScript interfaces MUST be in `packages/core/src/`
+  - ✅ Export all schemas/types from `packages/core/src/index.ts`
+  - ✅ Export types using `export type` for better tree-shaking
+  - ❌ Never import from app-specific packages
+  - ❌ Never contain app-specific logic
+
+### `@sungaze/api` - API Types
+
+- **Purpose**: API-specific types that clients need
+- **Contains**:
+  - `AppRouter` type (tRPC router type)
+  - API-specific type exports
+- **Rules**:
+  - ✅ Export types via `src/types.ts` for clean imports
+  - ✅ Use package.json `exports` field for proper module resolution
+  - ✅ Re-export shared types from `@sungaze/core` when needed
+  - ❌ Don't duplicate schemas that should be in `@sungaze/core`
+
+### App Packages (`apps/mobile`, `apps/web`)
+
+- **Purpose**: Application-specific code
+- **Rules**:
+  - ✅ Import shared types from `@sungaze/core`
+  - ✅ Import API types from `@sungaze/api/types` (NOT from source files)
+  - ✅ Use TypeScript path aliases for clean imports
+  - ✅ Ensure workspace protocols are used: `"@sungaze/core": "workspace:*"`
+  - ❌ Never import directly from other apps' source files (e.g., `@sungaze/api/src/...`)
+  - ❌ Never duplicate types that exist in `@sungaze/core`
+
+## 🔗 Import Patterns
+
+### ✅ CORRECT Patterns
+
+```typescript
+// In apps/api/src/routers/sun.router.ts
+import { SunStateResponseSchema } from "@sungaze/core";
+
+// In apps/mobile/src/lib/trpc.ts
+import type { AppRouter } from "@sungaze/api/types";
+
+// In apps/mobile/src/context/SunContext.tsx
+import type { Location, SunStateResponse } from "@sungaze/core";
+```
+
+### ❌ INCORRECT Patterns
+
+```typescript
+// ❌ DON'T: Import from API source files
+import type { AppRouter } from "@sungaze/api/src/routers";
+
+// ❌ DON'T: Duplicate schemas in apps
+// apps/api/src/schemas/sun.schema.ts (should be in @sungaze/core)
+
+// ❌ DON'T: Import app-specific code in core
+import { something } from "@sungaze/api";
+```
+
+## 📁 File Organization
+
+### Schema Files
+
+```
+packages/core/src/schemas/
+  ├── sun.schema.ts          # Sun-related schemas
+  ├── location.schema.ts     # Location-related schemas
+  └── index.ts               # Re-export all schemas (optional)
+```
+
+### Type Exports
+
+```
+packages/core/src/index.ts
+  export * from "./schemas/sun.schema";
+  export * from "./types/...";
+
+apps/api/src/types.ts
+  export type { AppRouter } from "./routers";
+```
+
+## ⚙️ Configuration
+
+### TypeScript Path Aliases
+
+Each app should configure path aliases in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@sungaze/core": ["../../packages/core/src/index.ts"],
+      "@sungaze/api": ["../../apps/api/src/index.ts"],
+      "@sungaze/api/types": ["../../apps/api/src/types.ts"]
+    }
+  }
+}
+```
+
+### Package.json Exports
+
+API packages MUST use `exports` field:
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
+    }
+  }
+}
+```
+
+### Metro Config (Expo/Mobile)
+
+For Expo/Metro to respect package exports, enable `unstable_enablePackageExports`:
+
+```javascript
+// apps/mobile/metro.config.js
+const { getDefaultConfig } = require("expo/metro-config");
+const path = require("path");
+
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, "../..");
+
+const config = getDefaultConfig(projectRoot);
+
+// Enable package exports support
+config.resolver.unstable_enablePackageExports = true;
+
+// Watch all files in the monorepo
+config.watchFolders = [workspaceRoot];
+
+// Resolve modules from the project and the workspace root
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+  path.resolve(workspaceRoot, "node_modules"),
+];
+
+module.exports = config;
+```
+
+### Workspace Protocols
+
+Ensure all workspace dependencies use the `workspace:*` protocol:
+
+```json
+{
+  "dependencies": {
+    "@sungaze/core": "workspace:*",
+    "@sungaze/api": "workspace:*"
+  }
+}
+```
+
+## ✅ Adding New Types - Checklist
+
+When creating or modifying types, follow this checklist:
+
+1. **Is this type used by multiple apps?**
+   - ✅ Yes → Add to `@sungaze/core/src/schemas/` or `@sungaze/core/src/types/`
+   - ❌ No → Keep in the app where it's used
+
+2. **Is it a Zod schema?**
+   - ✅ Yes → `packages/core/src/schemas/[name].schema.ts`
+   - ✅ Export from `packages/core/src/index.ts`
+
+3. **Is it an API router type?**
+   - ✅ Yes → Export from `apps/api/src/types.ts`
+   - ✅ Clients import via `@sungaze/api/types`
+
+4. **Is it a shared interface?**
+   - ✅ Yes → Add to `packages/core/src/types/`
+   - ✅ Export from `packages/core/src/index.ts`
+
+5. **After adding:**
+   - ✅ Build core package: `pnpm --filter @sungaze/core build`
+   - ✅ Verify type-check passes: `pnpm type-check`
+
+## 🔄 Refactoring Existing Code
+
+If you see types/schemas in app directories that should be shared:
+
+1. Move to `packages/core/src/schemas/` or `packages/core/src/types/`
+2. Export from `packages/core/src/index.ts`
+3. Update all imports to use `@sungaze/core`
+4. Delete the old file
+5. Build core package: `pnpm --filter @sungaze/core build`
+6. Verify: `pnpm type-check`
+
+## 📝 Code Changes Workflow
+
+When creating or modifying types:
+
+1. ✅ Check if type exists in `@sungaze/core` first
+2. ✅ If creating new schema, add to `packages/core/src/schemas/`
+3. ✅ Export from `packages/core/src/index.ts`
+4. ✅ Update API to import from `@sungaze/core` (not local schemas)
+5. ✅ Build core package: `pnpm --filter @sungaze/core build`
+6. ✅ Verify type-check passes in all apps: `pnpm type-check`
+
+## 💡 Examples
+
+### Example: Adding a New Schema
+
+1. Create `packages/core/src/schemas/user.schema.ts`:
+
+   ```typescript
+   import { z } from "zod";
+
+   export const UserSchema = z.object({
+     id: z.string(),
+     name: z.string(),
+   });
+
+   export type User = z.infer<typeof UserSchema>;
+   ```
+
+2. Export from `packages/core/src/index.ts`:
+
+   ```typescript
+   export * from "./schemas/user.schema";
+   ```
+
+3. Use in API:
+
+   ```typescript
+   import { UserSchema } from "@sungaze/core";
+   ```
+
+4. Use in Mobile:
+   ```typescript
+   import type { User } from "@sungaze/core";
+   ```
+
+## 🎯 Key Rules Summary
+
+- ✅ **Always** check `@sungaze/core` before creating new schemas
+- ✅ **Always** use package exports, never direct source file imports
+- ✅ **Always** use `workspace:*` protocol for workspace dependencies
+- ✅ **Always** enable `unstable_enablePackageExports` in Metro config
+- ❌ **Never** create duplicate types across packages
+- ❌ **Never** import from `@sungaze/api/src/...` (use `@sungaze/api/types`)
+- ❌ **Never** put shared schemas in app directories
+
+## 📚 Reference
+
+- See `README.md` for project overview and setup
+- This file (`.cursorrules`) is the single source of truth for architecture patterns
+
+---
+
+**Remember**: When in doubt, ask: "Would another app need this type?" If yes, it belongs in `@sungaze/core`.

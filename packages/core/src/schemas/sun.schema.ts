@@ -1,5 +1,6 @@
 /**
  * Zod schemas for sun state validation.
+ * This is the single source of truth for sun-related schemas shared across all apps.
  */
 
 import { z } from "zod";
@@ -7,7 +8,7 @@ import { z } from "zod";
 /**
  * Schema for location data.
  */
-const LocationSchema = z.object({
+export const LocationSchema = z.object({
   lat: z.number(),
   lon: z.number(),
   city: z.string(),
@@ -17,7 +18,7 @@ const LocationSchema = z.object({
 /**
  * Schema for sun position data.
  */
-const SunPositionSchema = z.object({
+export const SunPositionSchema = z.object({
   altitude: z.number(),
   azimuth: z.number(),
 });
@@ -31,4 +32,7 @@ export const SunStateResponseSchema = z.object({
   timestamp: z.string(), // ISO timestamp string
 });
 
+// Export inferred types for use across the monorepo
 export type SunStateResponse = z.infer<typeof SunStateResponseSchema>;
+export type Location = z.infer<typeof LocationSchema>;
+export type SunPosition = z.infer<typeof SunPositionSchema>;

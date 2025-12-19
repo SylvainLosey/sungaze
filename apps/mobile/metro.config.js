@@ -6,6 +6,9 @@ const workspaceRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 
+// Enable package exports support (required for @sungaze/api/types exports)
+config.resolver.unstable_enablePackageExports = true;
+
 // 1. Watch all files in the monorepo
 config.watchFolders = [workspaceRoot];
 

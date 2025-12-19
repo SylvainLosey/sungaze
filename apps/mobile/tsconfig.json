@@ -2,10 +2,10 @@
   "extends": ["expo/tsconfig.base", "../../packages/config/tsconfig.base.json"],
   "compilerOptions": {
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@sungaze/core": ["../../packages/core/src/index.ts"]
+      "@/*": ["./src/*"],
+      "@sungaze/core": ["../../packages/core/src/index.ts"],
+      "@sungaze/api": ["../../apps/api/src/index.ts"],
+      "@sungaze/api/types": ["../../apps/api/src/types.ts"]
     }
   },
   "include": [
