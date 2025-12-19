@@ -17,10 +17,11 @@ export const LocationSchema = z.object({
 
 /**
  * Schema for sun position data.
+ * Altitude and azimuth are in degrees.
  */
 export const SunPositionSchema = z.object({
-  altitude: z.number(),
-  azimuth: z.number(),
+  altitudeDegrees: z.number(),
+  azimuthDegrees: z.number(),
 });
 
 /**

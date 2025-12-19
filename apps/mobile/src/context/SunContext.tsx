@@ -1,18 +1,33 @@
 /**
  * Sun Context for managing sun state and location data.
+ * Uses Reanimated shared values for smooth animations.
  */
 
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 import { trpc } from "@/lib/trpc";
 import { createTRPCClient } from "@/lib/trpc-client";
 import type { Location } from "@sungaze/core";
+import {
+  interpolateSkyColor,
+  interpolateSunColor,
+} from "@/theme/solar-interpolation";
 
 interface SunContextValue {
-  altitude: number | null;
-  azimuth: number | null;
+  altitudeDegrees: number | null;
+  azimuthDegrees: number | null;
   location: Location | null;
   isReady: boolean;
+  // Animated shared values
+  altitudeShared: ReturnType<typeof useSharedValue<number>>;
+  // Animated styles
+  skyStyle: ReturnType<typeof useAnimatedStyle>;
+  sunStyle: ReturnType<typeof useAnimatedStyle>;
 }
 
 const SunContext = createContext<SunContextValue | undefined>(undefined);
@@ -47,11 +62,42 @@ function SunContextInner({ children }: SunProviderProps) {
   // Fetch sun state on mount
   const { data, isLoading } = trpc.sun.getInitialState.useQuery();
 
+  // Create shared value for altitude (in degrees)
+  const altitudeShared = useSharedValue<number>(data?.sun.altitudeDegrees ?? 0);
+
+  // Update shared value when data changes
+  useEffect(() => {
+    if (data?.sun.altitudeDegrees !== undefined) {
+      altitudeShared.value = withTiming(data.sun.altitudeDegrees, {
+        duration: 1000, // Smooth transition over 1 second
+      });
+    }
+  }, [data?.sun.altitudeDegrees, altitudeShared]);
+
+  // Animated style for sky background
+  const skyStyle = useAnimatedStyle(() => {
+    return {
+      backgroundColor: interpolateSkyColor(altitudeShared.value),
+    };
+  });
+
+  // Animated style for sun emissive color
+  const sunStyle = useAnimatedStyle(() => {
+    return {
+      // For sun, we might want to use this as a tint or shadow color
+      // Adjust based on your UI needs
+      tintColor: interpolateSunColor(altitudeShared.value),
+    };
+  });
+
   const value: SunContextValue = {
-    altitude: data?.sun.altitude ?? null,
-    azimuth: data?.sun.azimuth ?? null,
+    altitudeDegrees: data?.sun.altitudeDegrees ?? null,
+    azimuthDegrees: data?.sun.azimuthDegrees ?? null,
     location: data?.location ?? null,
     isReady: !isLoading && data !== undefined,
+    altitudeShared,
+    skyStyle,
+    sunStyle,
   };
 
   return <SunContext.Provider value={value}>{children}</SunContext.Provider>;

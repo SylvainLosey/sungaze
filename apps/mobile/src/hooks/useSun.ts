@@ -5,11 +5,10 @@
 import { useSunContext } from "@/context/SunContext";
 
 /**
- * Hook to get the raw sun altitude.
- * @returns The sun altitude in radians, or null if not ready
+ * Hook to get the raw sun altitude in degrees.
+ * @returns The sun altitude in degrees, or null if not ready
  */
 export function useSun() {
-  const { altitude } = useSunContext();
-  return altitude;
+  const { altitudeDegrees } = useSunContext();
+  return altitudeDegrees;
 }
-
