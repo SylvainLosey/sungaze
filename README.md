@@ -40,9 +40,10 @@
   - Works across Web (PostCSS) and Mobile (NativeWind)
 
 - **`@sungaze/config`** - Shared configuration
-  - Tailwind configuration
-  - TypeScript configuration
-  - Other shared configs
+  - Base TypeScript configuration (`tsconfig.base.json`)
+  - Base ESLint configuration (`eslint.base.config.mjs`)
+  - Prettier configuration (`prettier.config.mjs`)
+  - Centralized settings for consistency across all packages
 
 ## Key Patterns
 
@@ -69,7 +70,7 @@
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm 9.0.0+ (enforced via `packageManager` field)
 
 ### Installation
@@ -123,6 +124,18 @@ pnpm lint
 pnpm --filter @sungaze/web lint
 ```
 
+### Formatting
+
+```bash
+# Format all files (TypeScript, JavaScript, JSON, CSS, Markdown)
+pnpm format
+
+# Check formatting without changing files
+pnpm format:check
+```
+
+**Note:** Format on save is configured via `.vscode/settings.json`. Files will automatically format when saved in Cursor/VSCode.
+
 ## Useful Commands
 
 ### Root Level Commands
@@ -134,6 +147,8 @@ pnpm --filter @sungaze/web lint
 | `pnpm start` | Start all apps in production mode |
 | `pnpm lint` | Lint all workspaces |
 | `pnpm type-check` | Type-check all workspaces |
+| `pnpm format` | Format all files with Prettier |
+| `pnpm format:check` | Check formatting without changing files |
 | `pnpm clean` | Clean all build artifacts and node_modules |
 
 ### App-Specific Commands
@@ -189,7 +204,11 @@ sungaze/
 ├── packages/
 │   ├── core/         # Shared logic, types, Zod schemas
 │   ├── ui/           # Shared UI components
-│   └── config/       # Shared configuration
+│   └── config/       # Shared configuration (TS, ESLint, Prettier)
+├── .vscode/          # Editor settings (format on save, extensions)
+├── .editorconfig     # Editor configuration
+├── .prettierrc.mjs   # Prettier config (references shared config)
+├── .prettierignore   # Files to exclude from formatting
 ├── package.json      # Root workspace configuration
 ├── pnpm-workspace.yaml
 └── turbo.json        # Turborepo configuration
@@ -198,9 +217,10 @@ sungaze/
 ## Development Workflow
 
 1. **Make changes** to shared packages (`@sungaze/core`, `@sungaze/ui`)
-2. **Build packages** - Turborepo will automatically rebuild dependents
-3. **Test changes** - Run type-check and lint across affected workspaces
-4. **Start apps** - Use `pnpm dev` to start all apps with hot reload
+2. **Format code** - Files auto-format on save (or run `pnpm format`)
+3. **Build packages** - Turborepo will automatically rebuild dependents
+4. **Test changes** - Run type-check and lint across affected workspaces
+5. **Start apps** - Use `pnpm dev` to start all apps with hot reload
 
 ## Type Safety Workflow
 
@@ -209,6 +229,30 @@ sungaze/
 3. **Import types** in apps for type-safe API contracts
 4. **Validate at runtime** using Zod schemas in API
 5. **Type-check** using `pnpm type-check` to catch errors early
+
+## Configuration
+
+### Shared Configs
+
+All packages and apps extend shared configurations from `@sungaze/config`:
+
+- **TypeScript**: All `tsconfig.json` files extend `packages/config/tsconfig.base.json`
+- **ESLint**: Base config available at `packages/config/eslint.base.config.mjs`
+- **Prettier**: Shared config at `packages/config/prettier.config.mjs`
+
+### Editor Setup
+
+The project includes editor configuration for consistent development:
+
+- **`.vscode/settings.json`** - Format on save enabled with Prettier
+- **`.vscode/extensions.json`** - Recommended extensions (Prettier, ESLint, TypeScript)
+- **`.editorconfig`** - Editor settings for consistency
+- **`.prettierrc.mjs`** - Root Prettier config (references shared config)
+
+**Recommended Extensions** (install when prompted):
+- Prettier - Code formatter
+- ESLint
+- TypeScript and JavaScript Language Features
 
 ## Styling Workflow
 
@@ -227,6 +271,13 @@ When adding new features:
 4. Export types from schemas for type safety
 5. Follow React 19 patterns (`useActionState`, `useOptimistic`)
 6. Follow Next.js 16 patterns (async params/searchParams)
+
+### Code Style
+
+- **Formatting**: Code is automatically formatted on save (Prettier)
+- **Linting**: ESLint runs on all TypeScript files
+- **Type Safety**: All packages use strict TypeScript settings
+- **Configs**: Extend shared configs from `@sungaze/config` when possible
 
 ## License
 

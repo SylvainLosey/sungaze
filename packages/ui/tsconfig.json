@@ -2,15 +2,12 @@
   "extends": "../../packages/config/tsconfig.base.json",
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": ".",
-    "paths": {
-      "@sungaze/core": ["../../packages/core/src/index.ts"]
-    },
-    "noEmit": false,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true
@@ -18,3 +15,4 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
+
