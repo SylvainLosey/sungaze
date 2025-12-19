@@ -1,0 +1,20 @@
+# Nixpacks configuration for Railway deployment
+# This ensures proper monorepo handling
+# Railway sets root directory to apps/api, so we need to go up to repo root
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm"]
+
+[phases.install]
+cmds = [
+  "cd ../.. && pnpm install --frozen-lockfile",
+  "cd ../.. && pnpm --filter @sungaze/core build",
+  "cd ../.. && pnpm --filter @sungaze/api build"
+]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "pnpm start"
+

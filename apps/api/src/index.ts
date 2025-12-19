@@ -34,7 +34,10 @@ fastify.get("/", async () => {
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 3001, host: "0.0.0.0" });
+    const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+    const HOST = process.env.HOST || "0.0.0.0";
+    await fastify.listen({ port: PORT, host: HOST });
+    fastify.log.info(`Server listening on ${HOST}:${PORT}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

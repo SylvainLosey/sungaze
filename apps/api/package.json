@@ -17,6 +17,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "build:railway": "pnpm install && pnpm --filter @sungaze/core build && pnpm build",
     "start": "node dist/index.js",
     "lint": "eslint src",
     "type-check": "tsc --noEmit",

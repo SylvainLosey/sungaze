@@ -7,16 +7,28 @@ import Constants from "expo-constants";
 
 // Get API URL from environment or use default
 const getBaseUrl = () => {
-  // In development, use localhost
-  // In production, use your API URL
+  // Priority: EXPO_PUBLIC_API_URL > app.json extra.apiUrl > default
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  const configUrl = Constants.expoConfig?.extra?.apiUrl;
+
+  // Use environment variable first, then config, then default
+  const apiUrl = envUrl || configUrl;
+
+  if (apiUrl) {
+    // Ensure the URL ends with /trpc
+    return apiUrl.endsWith("/trpc") ? apiUrl : `${apiUrl}/trpc`;
+  }
+
+  // Fallback: In development, you can use localhost for simulator
+  // For physical device testing with real IP detection, use Railway URL
   if (__DEV__) {
-    // For iOS simulator, use localhost
-    // For Android emulator, use 10.0.2.2
-    // For physical device, use your computer's IP
+    // For iOS simulator only - use localhost
+    // For physical device, set EXPO_PUBLIC_API_URL to your Railway URL
     return "http://localhost:3001/trpc";
   }
-  // In production, use your actual API URL
-  return Constants.expoConfig?.extra?.apiUrl || "http://localhost:3001/trpc";
+
+  // Production fallback
+  return "http://localhost:3001/trpc";
 };
 
 export function createTRPCClient() {
