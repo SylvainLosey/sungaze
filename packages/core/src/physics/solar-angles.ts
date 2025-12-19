@@ -15,3 +15,5 @@ export const SOLAR_ANGLES = {
   /** UVA start: Sun is 12° above the horizon */
   UVA_START: 12,
 } as const;
+
+

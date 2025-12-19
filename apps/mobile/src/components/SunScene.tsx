@@ -3,6 +3,7 @@
  * Displays a sun sphere positioned based on altitude and colored based on sun interpolation.
  */
 
+/* eslint-disable react/no-unknown-property */
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useRef, useState, useEffect } from "react";
 import { useSunContext } from "@/context/SunContext";
