@@ -4,7 +4,7 @@
     "strict": true,
     "paths": {
       "@/*": [
-        "./*"
+        "./src/*"
       ],
       "@sungaze/core": ["../../packages/core/src/index.ts"]
     }
