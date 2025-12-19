@@ -1,14 +1,18 @@
 {
-  "name": "sungaze-mobile",
+  "name": "@sungaze/mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
+    "dev": "expo start",
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
+    "build": "expo export",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .expo node_modules",
+    "reset-project": "node ./scripts/reset-project.js"
   },
   "dependencies": {
     "@sungaze/core": "workspace:*",
