@@ -1,0 +1,1 @@
+export const GET_SUN_INFO = () => "Solar data from Core";
