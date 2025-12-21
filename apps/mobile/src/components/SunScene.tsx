@@ -4,72 +4,29 @@
  */
 
 /* eslint-disable react/no-unknown-property */
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useRef, useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber/native";
+import { OrbitControls } from "@react-three/drei/native";
 import { useSunContext } from "@/context/SunContext";
 import { interpolateSunColor } from "@/theme/solar-interpolation";
-import { degreesToRadians } from "@sungaze/core";
-import * as THREE from "three";
 
 /**
  * Sun sphere component that reacts to altitude changes.
  */
 function SunSphere({ altitudeDegrees }: { altitudeDegrees: number }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [color, setColor] = useState("#ffb703");
-
   // Convert altitude to Y position
   // At 0° (horizon), Y = 0
   // At 90° (zenith), Y = 1
-  // At -18° (below horizon), Y = -0.2
   const yPosition = altitudeDegrees / 90;
-
-  // Update color based on altitude
-  useEffect(() => {
-    const newColor = interpolateSunColor(altitudeDegrees);
-    setColor(newColor);
-  }, [altitudeDegrees]);
-
-  // Convert hex color to RGB for Three.js
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16) / 255,
-          g: parseInt(result[2], 16) / 255,
-          b: parseInt(result[3], 16) / 255,
-        }
-      : { r: 1, g: 0.7, b: 0 };
-  };
-
-  const rgbColor = hexToRgb(color);
-
-  useFrame(() => {
-    if (meshRef.current) {
-      meshRef.current.position.y = yPosition;
-    }
-  });
+  const color = interpolateSunColor(altitudeDegrees);
 
   return (
-    <mesh ref={meshRef} position={[0, yPosition, 0]}>
+    <mesh position={[0, yPosition, 0]}>
       <sphereGeometry args={[0.1, 32, 32]} />
       <meshStandardMaterial
-        color={[rgbColor.r, rgbColor.g, rgbColor.b]}
-        emissive={[rgbColor.r, rgbColor.g, rgbColor.b]}
-        emissiveIntensity={1.5}
+        color={color}
+        emissive={color}
+        emissiveIntensity={2}
       />
-    </mesh>
-  );
-}
-
-/**
- * Horizon line at Y=0.
- */
-function Horizon() {
-  return (
-    <mesh position={[0, 0, 0]} rotation={[degreesToRadians(90), 0, 0]}>
-      <ringGeometry args={[0.8, 1.0, 64]} />
-      <meshBasicMaterial color="#ffffff" opacity={0.3} transparent />
     </mesh>
   );
 }
@@ -92,8 +49,8 @@ export function SunScene() {
     >
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
+      <OrbitControls enableZoom={true} enablePan={true} enableRotate={true} />
       <SunSphere altitudeDegrees={altitudeDegrees} />
-      <Horizon />
     </Canvas>
   );
 }
